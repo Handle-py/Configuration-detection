@@ -1,0 +1,109 @@
+import socket
+import requests
+import subprocess
+import platform
+
+def display_handle_ascii_art():
+    art = """
+... ██╗  ██╗ █████╗ ███╗   ██╗██████╗ ██╗     ███████╗    ██████╗  ██████╗ ██╗  ██╗
+██║  ██║██╔══██╗████╗  ██║██╔══██╗██║     ██╔════╝    ██╔══██╗██╔═══██╗╚██╗██╔╝
+███████║███████║██╔██╗ ██║██║  ██║██║     █████╗      ██║  ██║██║   ██║ ╚███╔╝ 
+██╔══██║██╔══██║██║╚██╗██║██║  ██║██║     ██╔══╝      ██║  ██║██║   ██║ ██╔██╗ 
+██║  ██║██║  ██║██║ ╚████║██████╔╝███████╗███████╗    ██████╔╝╚██████╔╝██╔╝ ██╗
+╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═════╝ ╚══════╝╚══════╝    ╚═════╝  ╚═════╝ ╚═╝  ╚═╝                                                          
+⠀⠀⠀⠀⠀⠀⠀⠀NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+	  NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNh::::::::::::::dNNNNNNNNNNNm/:::::NNNNNNNNdo:.```.-/yNNNN
+	  NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN/              yNNNNNNNNNNs`      NNNNNNm:           `sNN
+	  NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN`    ``````````hNNNNNNNNm:        NNNNNd`     ./:      /N
+	  NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNh     dNNNNNNNNNNNNNNNNNs`         NNNNN-     +NNNd`     y
+	  NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN+    .ms+//+ohNNNNNNNNm-    +      NNNNd      mNNNN+     :
+	  NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN`             `+NNNNNs`   -dN      NNNNs     `NNNNNy     `
+	  NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNh      `--`      -NNd-    oNNN      NNNNo     .NNNNNh
+	  NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNy::::/hNNNNy`     +m     +ssss      ossNs     `NNNNNy
+	  NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN/     -d                   Nh      NNNNNo     -
+	  NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNy......mNNNNN-     /d                   NN`     yNNNN.     o
+	  NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNm`     .oyyo.     .mNdddddddddd      dddNNy     `+ys-     .N
+	  NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNd.              /mNNNNNNNNNNNN      NNNNNNy`            -mN
+	  NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNy/.        -odNNNNNNNNNNNNNN      NNNNNNNmo-       `:yNNN
+	   ...
+"""
+    print('\033[94m' + art + '\033[0m')
+
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(('8.8.8.8', 80))
+        IP = s.getsockname()[0]
+    except:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
+
+def get_public_ip():
+    try:
+        return requests.get('https://api.ipify.org').text
+    except:
+        return "Erreur lors de la récupération de l'IP publique"
+
+def get_connection_name():
+    system_type = platform.system()
+
+    if system_type == "Windows":
+        try:
+            result = subprocess.check_output(['netsh', 'wlan', 'show', 'interfaces']).decode('utf-8', 'ignore')
+            for line in result.split('\n'):
+                if "Nom de SSID" in line:
+                    return line.split(":")[1].strip()
+            return "Non connecté à un réseau WiFi"
+        except:
+            return "Erreur lors de la récupération du SSID"
+    elif system_type == "Linux":
+        try:
+            result = subprocess.check_output(['nmcli', '-t', 'device', 'wifi']).decode('utf-8', 'ignore')
+            active_connections = [line for line in result.split("\n") if line.endswith("*")]
+            if active_connections:
+                return active_connections[0].split(":")[1]
+            else:
+                return "Non connecté à un réseau WiFi"
+        except:
+            return "Erreur lors de la récupération du SSID"
+    else:
+        return "OS non supporté"
+
+def get_cpu_info():
+    if platform.system() == "Windows":
+        try:
+            return subprocess.check_output(['wmic', 'cpu', 'get', 'name']).decode('utf-8').split('\n')[1].strip()
+        except:
+            return "Erreur lors de la récupération des infos CPU"
+    elif platform.system() == "Linux":
+        try:
+            return subprocess.check_output(['lscpu']).decode('utf-8').split('\n')[0].split(":")[1].strip()
+        except:
+            return "Erreur lors de la récupération des infos CPU"
+    else:
+        return "OS non supporté"
+
+def get_gpu_info():
+    if platform.system() == "Windows":
+        try:
+            return subprocess.check_output(['wmic', 'path', 'win32_videocontroller', 'get', 'name']).decode('utf-8').split('\n')[1].strip()
+        except:
+            return "Erreur lors de la récupération des infos GPU"
+    elif platform.system() == "Linux":
+        try:
+            return subprocess.check_output(['lspci', '|', 'grep', 'VGA']).decode('utf-8').split(":")[2].strip()
+        except:
+            return "Erreur lors de la récupération des infos GPU"
+    else:
+        return "OS non supporté"
+
+if __name__ == "__main__":
+    display_handle_ascii_art()
+    print(f"Adresse IP locale (IPv4) : {get_local_ip()}")
+    print(f"Adresse IP publique : {get_public_ip()}")
+    print(f"Nom de connexion : {get_connection_name()}")
+    print(f"Processeur : {get_cpu_info()}")
+    print(f"Carte Graphique : {get_gpu_info()}")
+    input("Appuyez sur Entrée pour quitter...")
